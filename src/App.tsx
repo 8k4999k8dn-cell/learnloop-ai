@@ -62,6 +62,7 @@ function App() {
   const [fromCache, setFromCache] = useState(false)
   const countLabel = useMemo(() => `${input.length}/${MAX_LEN}`, [input.length])
   const canSubmit = input.trim().length >= 8 && !loading
+  const apiBase = import.meta.env.VITE_API_BASE_URL || ''
 
   async function generateCard() {
     if (!canSubmit) return
@@ -69,7 +70,7 @@ function App() {
     setLoading(true)
 
     try {
-      const resp = await fetch('/api/learn', {
+      const resp = await fetch(`${apiBase}/api/learn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: input.trim() }),
