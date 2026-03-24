@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import express from 'express'
+import cors from 'cors'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -9,6 +10,7 @@ const app = express()
 const PORT = Number(process.env.PORT || 8787)
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat'
+const CORS_ORIGIN = process.env.CORS_ORIGIN || ''
 
 const MAX_INPUT_LENGTH = 1200
 const MIN_INPUT_LENGTH = 8
@@ -19,6 +21,23 @@ const CACHE_TTL_MS = 10 * 60 * 1000
 const ipBuckets = new Map()
 const responseCache = new Map()
 
+const allowedOrigins = CORS_ORIGIN.split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow server-to-server and health checks with no origin.
+      if (!origin) return callback(null, true)
+      if (allowedOrigins.length === 0) return callback(null, true)
+      if (allowedOrigins.includes(origin)) return callback(null, true)
+      return callback(new Error('Not allowed by CORS'))
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+)
 app.use(express.json({ limit: '32kb' }))
 
 function cleanOldBuckets(now) {

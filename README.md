@@ -20,6 +20,7 @@ cp .env.example .env
 DEEPSEEK_API_KEY=你的真实密钥
 DEEPSEEK_MODEL=deepseek-chat
 PORT=8787
+CORS_ORIGIN=http://localhost:5173
 ```
 
 ## 2) 安装依赖
@@ -45,3 +46,4 @@ npm run dev:full
 - 每分钟每 IP 最多 8 次请求
 - 同问题结果缓存 10 分钟（命中不再调用模型）
 - `max_tokens` 限制为 450
+- 可配置 `CORS_ORIGIN` 仅允许你的前端域名访问 API（防盗刷）
