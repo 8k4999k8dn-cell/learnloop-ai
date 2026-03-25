@@ -12,9 +12,8 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat'
 const CORS_ORIGIN = process.env.CORS_ORIGIN || ''
 
-const MAX_INPUT_LENGTH = 1200
-const MIN_INPUT_LENGTH = 8
-const MAX_OUTPUT_TOKENS = 450
+const MAX_INPUT_LENGTH = 20000
+const MAX_OUTPUT_TOKENS = 900
 const REQUESTS_PER_MINUTE = 8
 const CACHE_TTL_MS = 10 * 60 * 1000
 
@@ -70,15 +69,16 @@ function hashPrompt(prompt) {
 
 function makeStudyPrompt(topic) {
   return [
-    '你是学习助手。请针对用户主题输出可执行、简洁、结构清晰的学习卡片。',
-    '输出格式必须严格包含以下 5 部分：',
-    '1) 一句话定义',
-    '2) 关键概念（3-5条）',
-    '3) 常见误区（2-3条）',
-    '4) 5分钟行动清单（3条）',
-    '5) 追问问题（3条）',
-    '请使用中文，避免废话，不要使用 markdown 标题符号。',
-    `用户主题：${topic}`,
+    '你是严谨的技术与产品学习教练，只输出对用户题目有直接检索价值的实质内容。',
+    '硬性要求：禁止空洞套话（如「先建立框架」「多维度理解」），除非同一句里立刻给出与该主题绑定的具体机制、对象或判断标准。',
+    '每一句话必须出现用户主题中的实体，或明确写出与主题强相关的工具名、协议名、流程名、输入输出或指标。',
+    '输出格式必须严格包含以下 5 部分（中文，不要用 markdown 标题符号）：',
+    '1) 一句话定义：交代类型（模型/协议/产品/流程）+ 解决的任务 + 输入输出边界',
+    '2) 关键概念：3～5 条，每条含可核对细节（步骤、接口形态、数据流或工程要点之一）',
+    '3) 常见误区：2～3 条，写清「错因 → 正确做法」',
+    '4) 5 分钟行动清单：3 条，每条是可执行检查（读哪类文档、跑什么最小实验、核对哪个字段）',
+    '5) 追问问题：3 条，必须能从你上文内容顺着往下深挖',
+    `用户主题（必须全文紧扣）：${topic}`,
   ].join('\n')
 }
 
@@ -92,10 +92,6 @@ app.post('/api/learn', async (req, res) => {
   }
 
   const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim() : ''
-
-  if (topic.length < MIN_INPUT_LENGTH) {
-    return res.status(400).json({ error: `请输入至少 ${MIN_INPUT_LENGTH} 个字符` })
-  }
 
   if (topic.length > MAX_INPUT_LENGTH) {
     return res.status(400).json({ error: `输入过长，请控制在 ${MAX_INPUT_LENGTH} 字以内` })

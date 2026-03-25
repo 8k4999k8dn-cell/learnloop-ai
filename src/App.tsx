@@ -85,7 +85,7 @@ function App() {
   const [answers, setAnswers] = useState<string[]>([])
   const [feedback, setFeedback] = useState<TestFeedback | null>(null)
   const countLabel = useMemo(() => `${input.length}/${MAX_LEN}`, [input.length])
-  const canSubmit = input.trim().length >= 8 && !loading && input.length <= MAX_LEN
+  const canSubmit = !loading && input.length <= MAX_LEN
   const currentQuestion = questions[questionIndex]
   const progress = questions.length
     ? Math.round(((questionIndex + 1) / questions.length) * 100)
@@ -166,7 +166,7 @@ function App() {
       if (!selected || selected.length < 2 || selected.length > 80) return
       setLoading(true)
       try {
-        const exp = await explainWord(selected)
+        const exp = await explainWord(selected, topic)
         setExplanation(exp)
       } finally {
         setLoading(false)
@@ -175,7 +175,7 @@ function App() {
 
     document.addEventListener('mouseup', onMouseUp)
     return () => document.removeEventListener('mouseup', onMouseUp)
-  }, [viewMode])
+  }, [viewMode, topic])
 
   async function submitFollowUp() {
     if (!explanation || !followUpQuestion.trim()) return
@@ -183,7 +183,7 @@ function App() {
     setFollowUpQuestion('')
     setLoading(true)
     try {
-      const reply = await followUpExplain(text, explanation.selected_text)
+      const reply = await followUpExplain(text, explanation.selected_text, topic)
       setExplanation((prev) =>
         prev ? { ...prev, follow_ups: [...prev.follow_ups, reply] } : prev
       )
